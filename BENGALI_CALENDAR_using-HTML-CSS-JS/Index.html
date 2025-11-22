@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bengali Calendar - বাংলা পঞ্জিকা</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --primary: #d4380d;
+      --primary-light: #ff7a45;
+      --secondary: #722ed1;
+      --gold: #faad14;
+      --bg-dark: #1a1a2e;
+      --bg-card: #16213e;
+      --text-light: #f5f5f5;
+      --text-muted: #a0a0a0;
+      --festival: #52c41a;
+      --holiday: #f5222d;
+    }
+    
+    body {
+      font-family: 'Poppins', 'Noto Sans Bengali', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: var(--text-light);
+      padding: 20px;
+    }
+    
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 30px;
+      background: linear-gradient(135deg, rgba(212,56,13,0.2), rgba(114,46,209,0.2));
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+    }
+    
+    .header-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--gold), var(--primary-light));
+      /* standard + vendor-prefixed background-clip for gradient text */
+      background-clip: text;
+      -webkit-background-clip: text;
+      /* make text transparent so the gradient shows through */
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 5px;
+    }
+    
+    .header-bengali {
+      font-size: 1.8rem;
+      color: var(--gold);
+      font-family: 'Noto Sans Bengali', sans-serif;
+    }
+    
+    .today-info {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .today-box {
+      background: rgba(255,255,255,0.1);
+      padding: 15px 25px;
+      border-radius: 15px;
+      text-align: center;
+    }
+    
+    .today-box .label { font-size: 0.85rem; color: var(--text-muted); }
+    .today-box .bengali-date {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--gold);
+      font-family: 'Noto Sans Bengali', sans-serif;
+    }
+    .today-box .english-date { font-size: 1rem; color: var(--text-light); }
+    
+    .nav-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .nav-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(212,56,13,0.4); }
+    
+    .month-year {
+      font-size: 1.5rem;
+      font-weight: 600;
+      min-width: 280px;
+      text-align: center;
+    }
+    
+    .bengali-month {
+      font-family: 'Noto Sans Bengali', sans-serif;
+      color: var(--gold);
+      font-size: 1.3rem;
+    }
+    
+    .calendar-grid {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 15px;
+    }
+    
+    .weekday {
+      text-align: center;
+      padding: 15px 5px;
+      font-weight: 600;
+      color: var(--gold);
+      font-size: 0.9rem;
+    }
+    
+    .days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    
+    .day {
+      aspect-ratio: 1;
+      min-height: 90px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      border: 2px solid transparent;
+    }
+    
+    .day:hover { background: rgba(255,255,255,0.1); transform: scale(1.02); }
+    .day.today { border-color: var(--gold); box-shadow: 0 0 20px rgba(250,173,20,0.3); }
+    .day.empty { background: transparent; cursor: default; }
+    .day.empty:hover { transform: none; }
+    
+    .day.holiday { background: rgba(245,34,45,0.15); }
+    .day.festival { background: rgba(82,196,26,0.15); }
+    
+    .english-num {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      position: absolute;
+      top: 5px;
+      right: 8px;
+    }
+    
+    .bengali-num {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--gold);
+      font-family: 'Noto Sans Bengali', sans-serif;
+      margin-top: 5px;
+    }
+    
+    .event-indicator {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border-radius: 10px;
+      white-space: nowrap;
+      max-width: 90%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .event-indicator.holiday-tag { background: var(--holiday); color: white; }
+    .event-indicator.festival-tag { background: var(--festival); color: white; }
+    
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+    
+    .legend-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+    }
+    
+    .legend-dot.holiday { background: var(--holiday); }
+    .legend-dot.festival { background: var(--festival); }
+    .legend-dot.today { background: var(--gold); }
+    
+    .event-panel {
+      margin-top: 30px;
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 25px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .event-panel h3 {
+      color: var(--gold);
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .events-list { display: flex; flex-direction: column; gap: 12px; }
+    
+    .event-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      transition: all 0.3s;
+    }
+    
+    .event-item:hover { background: rgba(255,255,255,0.1); }
+    
+    .event-date {
+      min-width: 60px;
+      text-align: center;
+      padding: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 10px;
+    }
+    
+    .event-date .day-num { font-size: 1.5rem; font-weight: 700; }
+    .event-date .month-name { font-size: 0.7rem; }
+    
+    .event-details { flex: 1; }
+    .event-details .event-name { font-weight: 600; font-size: 1rem; }
+    .event-details .event-bengali {
+      font-family: 'Noto Sans Bengali', sans-serif;
+      color: var(--gold);
+      font-size: 0.9rem;
+    }
+    
+    .event-type {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .event-type.holiday { background: var(--holiday); }
+    .event-type.festival { background: var(--festival); }
+    
+    @media (max-width: 768px) {
+      .header-title { font-size: 1.8rem; }
+      .header-bengali { font-size: 1.3rem; }
+      .day { min-height: 70px; padding: 5px; }
+      .bengali-num { font-size: 1.1rem; }
+      .english-num { font-size: 0.65rem; }
+      .weekday { font-size: 0.75rem; padding: 10px 2px; }
+      .event-indicator { font-size: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 class="header-title">Bengali Calendar</h1>
+      <p class="header-bengali">বাংলা পঞ্জিকা ১৪৩২</p>
+      <div class="today-info">
+        <div class="today-box">
+          <div class="label">আজকের তারিখ (Today)</div>
+          <div class="bengali-date" id="todayBengali"></div>
+          <div class="english-date" id="todayEnglish"></div>
+        </div>
+        <div class="today-box">
+          <div class="label">ঋতু (Season)</div>
+          <div class="bengali-date" id="season"></div>
+        </div>
+      </div>
+    </header>
+    
+    <div class="nav-controls">
+      <button class="nav-btn" onclick="prevMonth()"><i class="fas fa-chevron-left"></i> আগের মাস</button>
+      <div class="month-year">
+        <div id="englishMonth"></div>
+        <div class="bengali-month" id="bengaliMonth"></div>
+      </div>
+      <button class="nav-btn" onclick="nextMonth()">পরের মাস <i class="fas fa-chevron-right"></i></button>
+    </div>
+    
+    <div class="calendar-grid">
+      <div class="weekdays">
+        <div class="weekday">রবি<br>Sun</div>
+        <div class="weekday">সোম<br>Mon</div>
+        <div class="weekday">মঙ্গল<br>Tue</div>
+        <div class="weekday">বুধ<br>Wed</div>
+        <div class="weekday">বৃহঃ<br>Thu</div>
+        <div class="weekday">শুক্র<br>Fri</div>
+        <div class="weekday">শনি<br>Sat</div>
+      </div>
+      <div class="days" id="daysGrid"></div>
+    </div>
+    
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot today"></div><span>আজ (Today)</span></div>
+      <div class="legend-item"><div class="legend-dot holiday"></div><span>ছুটি (Holiday)</span></div>
+      <div class="legend-item"><div class="legend-dot festival"></div><span>উৎসব (Festival)</span></div>
+    </div>
+    
+    <div class="event-panel">
+      <h3><i class="fas fa-calendar-star"></i> এই মাসের উৎসব ও ছুটি (Events & Holidays)</h3>
+      <div class="events-list" id="eventsList"></div>
+    </div>
+  </div>
+
+  <script>
+    const bengaliMonths = ['বৈশাখ','জ্যৈষ্ঠ','আষাঢ়','শ্রাবণ','ভাদ্র','আশ্বিন','কার্তিক','অগ্রহায়ণ','পৌষ','মাঘ','ফাল্গুন','চৈত্র'];
+    const bengaliMonthsEn = ['Boishakh','Joishtho','Aashar','Shrabon','Bhadro','Ashshin','Kartik','Ograhayon','Poush','Magh','Falgun','Choitro'];
+    const englishMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const bengaliNums = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+    const seasons = [
+      {name:'গ্রীষ্ম',en:'Grishmo (Summer)',months:[0,1]},
+      {name:'বর্ষা',en:'Borsha (Monsoon)',months:[2,3]},
+      {name:'শরৎ',en:'Shorot (Autumn)',months:[4,5]},
+      {name:'হেমন্ত',en:'Hemonto (Late Autumn)',months:[6,7]},
+      {name:'শীত',en:'Sheet (Winter)',months:[8,9]},
+      {name:'বসন্ত',en:'Bosonto (Spring)',months:[10,11]}
+    ];
+    
+    // Bengali month start dates for 2025-2026 (approximate)
+    const bengaliMonthStarts = {
+      2025: {
+        0: {month: 3, day: 15},  // Boishakh starts April 15
+        1: {month: 4, day: 16},  // Joishtho starts May 16
+        2: {month: 5, day: 16},  // Aashar starts June 16
+        3: {month: 6, day: 18},  // Shrabon starts July 18
+        4: {month: 7, day: 18},  // Bhadro starts Aug 18
+        5: {month: 8, day: 18},  // Ashshin starts Sep 18
+        6: {month: 9, day: 19},  // Kartik starts Oct 19
+        7: {month: 10, day: 17}, // Ograhayon starts Nov 17
+        8: {month: 11, day: 16}, // Poush starts Dec 16
+      },
+      2026: {
+        9: {month: 0, day: 15},  // Magh starts Jan 15
+        10: {month: 1, day: 14}, // Falgun starts Feb 14
+        11: {month: 2, day: 15}, // Choitro starts Mar 15
+      }
+    };
+
+    const festivals = {
+      '2025-1-1': {name:'New Year',bn:'নববর্ষ',type:'holiday'},
+      '2025-1-14': {name:'Poush Sankranti',bn:'পৌষ সংক্রান্তি',type:'festival'},
+      '2025-1-23': {name:'Netaji Birthday',bn:'নেতাজি জয়ন্তী',type:'holiday'},
+      '2025-1-26': {name:'Republic Day',bn:'প্রজাতন্ত্র দিবস',type:'holiday'},
+      '2025-2-2': {name:'Saraswati Puja',bn:'সরস্বতী পূজা',type:'festival'},
+      '2025-2-26': {name:'Maha Shivaratri',bn:'মহা শিবরাত্রি',type:'festival'},
+      '2025-3-14': {name:'Dol Purnima/Holi',bn:'দোল পূর্ণিমা',type:'festival'},
+      '2025-4-14': {name:'Bengali New Year Eve',bn:'চৈত্র সংক্রান্তি',type:'festival'},
+      '2025-4-15': {name:'Pohela Boishakh',bn:'পয়লা বৈশাখ',type:'holiday'},
+      '2025-5-12': {name:'Buddha Purnima',bn:'বুদ্ধ পূর্ণিমা',type:'festival'},
+      '2025-6-27': {name:'Rath Yatra',bn:'রথযাত্রা',type:'festival'},
+      '2025-7-10': {name:'Guru Purnima',bn:'গুরু পূর্ণিমা',type:'festival'},
+      '2025-8-9': {name:'Raksha Bandhan',bn:'রাখি বন্ধন',type:'festival'},
+      '2025-8-15': {name:'Independence Day',bn:'স্বাধীনতা দিবস',type:'holiday'},
+      '2025-8-16': {name:'Janmashtami',bn:'জন্মাষ্টমী',type:'festival'},
+      '2025-9-21': {name:'Mahalaya',bn:'মহালয়া',type:'festival'},
+      '2025-9-28': {name:'Maha Shashthi',bn:'মহাষষ্ঠী',type:'festival'},
+      '2025-9-29': {name:'Maha Saptami',bn:'মহাসপ্তমী',type:'festival'},
+      '2025-9-30': {name:'Maha Ashtami',bn:'মহাঅষ্টমী',type:'festival'},
+      '2025-10-1': {name:'Maha Navami',bn:'মহানবমী',type:'festival'},
+      '2025-10-2': {name:'Vijayadashami',bn:'বিজয়া দশমী',type:'holiday'},
+      '2025-10-6': {name:'Lakshmi Puja',bn:'লক্ষ্মী পূজা',type:'festival'},
+      '2025-10-20': {name:'Kali Puja/Diwali',bn:'কালী পূজা/দীপাবলি',type:'holiday'},
+      '2025-10-23': {name:'Bhai Phonta',bn:'ভাইফোঁটা',type:'festival'},
+      '2025-10-31': {name:'Jagaddhatri Puja',bn:'জগদ্ধাত্রী পূজা',type:'festival'},
+      '2025-11-5': {name:'Guru Nanak Jayanti',bn:'গুরু নানক জয়ন্তী',type:'festival'},
+      '2025-12-25': {name:'Christmas',bn:'বড়দিন',type:'holiday'},
+    };
+
+    let currentDate = new Date();
+    let currentMonth = currentDate.getMonth();
+    let currentYear = currentDate.getFullYear();
+
+    function toBengaliNum(n) {
+      return String(n).split('').map(d => bengaliNums[parseInt(d)]).join('');
+    }
+
+    function getBengaliDate(date) {
+      const y = date.getFullYear();
+      const m = date.getMonth();
+      const d = date.getDate();
+      
+      // Simplified conversion based on approximate month start dates
+      let bengaliMonth, bengaliDay, bengaliYear;
+      
+      if (m >= 3 && m <= 11) { // April to December
+        bengaliYear = y - 593;
+      } else { // January to March
+        bengaliYear = y - 594;
+      }
+      
+      // Approximate day calculation
+      const monthDayMap = [
+        {start: 15, bengMonth: 9, offset: 14},  // Jan -> Poush/Magh
+        {start: 14, bengMonth: 10, offset: 13}, // Feb -> Magh/Falgun
+        {start: 15, bengMonth: 11, offset: 14}, // Mar -> Falgun/Choitro
+        {start: 15, bengMonth: 0, offset: 14},  // Apr -> Choitro/Boishakh
+        {start: 16, bengMonth: 1, offset: 15},  // May -> Boishakh/Joishtho
+        {start: 16, bengMonth: 2, offset: 15},  // Jun -> Joishtho/Aashar
+        {start: 18, bengMonth: 3, offset: 17},  // Jul -> Aashar/Shrabon
+        {start: 18, bengMonth: 4, offset: 17},  // Aug -> Shrabon/Bhadro
+        {start: 18, bengMonth: 5, offset: 17},  // Sep -> Bhadro/Ashshin
+        {start: 19, bengMonth: 6, offset: 18},  // Oct -> Ashshin/Kartik
+        {start: 17, bengMonth: 7, offset: 16},  // Nov -> Kartik/Ograhayon
+        {start: 16, bengMonth: 8, offset: 15},  // Dec -> Ograhayon/Poush
+      ];
+      
+      const info = monthDayMap[m];
+      if (d < info.start) {
+        bengaliMonth = (info.bengMonth + 11) % 12;
+        bengaliDay = d + (30 - info.offset);
+      } else {
+        bengaliMonth = info.bengMonth;
+        bengaliDay = d - info.start + 1;
+      }
+      
+      return { day: bengaliDay, month: bengaliMonth, year: bengaliYear };
+    }
+
+    function getSeason(bengaliMonth) {
+      for (let s of seasons) {
+        if (s.months.includes(bengaliMonth)) return s;
+      }
+      return seasons[0];
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('daysGrid');
+      grid.innerHTML = '';
+      
+      const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const today = new Date();
+      
+      // Get Bengali month info for display
+      const midMonthDate = new Date(currentYear, currentMonth, 15);
+      const bengaliInfo = getBengaliDate(midMonthDate);
+      const season = getSeason(bengaliInfo.month);
+      
+      document.getElementById('englishMonth').textContent = `${englishMonths[currentMonth]} ${currentYear}`;
+      document.getElementById('bengaliMonth').textContent = `${bengaliMonths[bengaliInfo.month]} ${toBengaliNum(bengaliInfo.year)}`;
+      
+      // Update today's info
+      const todayBengali = getBengaliDate(today);
+      document.getElementById('todayBengali').textContent = `${toBengaliNum(todayBengali.day)} ${bengaliMonths[todayBengali.month]} ${toBengaliNum(todayBengali.year)}`;
+      document.getElementById('todayEnglish').textContent = today.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+      
+      const todaySeason = getSeason(todayBengali.month);
+      document.getElementById('season').textContent = `${todaySeason.name} (${todaySeason.en})`;
+      
+      // Empty cells for days before start
+      for (let i = 0; i < firstDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'day empty';
+        grid.appendChild(emptyDay);
+      }
+      
+      // Days of month
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateObj = new Date(currentYear, currentMonth, d);
+        const bengali = getBengaliDate(dateObj);
+        const dateKey = `${currentYear}-${currentMonth + 1}-${d}`;
+        const festival = festivals[dateKey];
+        
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'day';
+        
+        if (today.getDate() === d && today.getMonth() === currentMonth && today.getFullYear() === currentYear) {
+          dayDiv.classList.add('today');
+        }
+        
+        if (festival) {
+          dayDiv.classList.add(festival.type);
+        }
+        
+        dayDiv.innerHTML = `
+          <span class="english-num">${d}</span>
+          <span class="bengali-num">${toBengaliNum(bengali.day)}</span>
+          ${festival ? `<span class="event-indicator ${festival.type}-tag">${festival.bn}</span>` : ''}
+        `;
+        
+        dayDiv.onclick = () => showDayDetails(dateObj, bengali, festival);
+        grid.appendChild(dayDiv);
+      }
+      
+      renderEvents();
+    }
+
+    function renderEvents() {
+      const eventsList = document.getElementById('eventsList');
+      eventsList.innerHTML = '';
+      
+      const monthEvents = Object.entries(festivals).filter(([key]) => {
+        const [y, m] = key.split('-').map(Number);
+        return y === currentYear && m === currentMonth + 1;
+      });
+      
+      if (monthEvents.length === 0) {
+        eventsList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">এই মাসে কোনো বিশেষ দিন নেই</p>';
+        return;
+      }
+      
+      monthEvents.sort((a, b) => {
+        const dayA = parseInt(a[0].split('-')[2]);
+        const dayB = parseInt(b[0].split('-')[2]);
+        return dayA - dayB;
+      });
+      
+      for (const [key, event] of monthEvents) {
+        const day = parseInt(key.split('-')[2]);
+        const dateObj = new Date(currentYear, currentMonth, day);
+        const bengali = getBengaliDate(dateObj);
+        
+        const item = document.createElement('div');
+        item.className = 'event-item';
+        item.innerHTML = `
+          <div class="event-date">
+            <div class="day-num">${toBengaliNum(day)}</div>
+            <div class="month-name">${englishMonths[currentMonth].slice(0,3)}</div>
+          </div>
+          <div class="event-details">
+            <div class="event-name">${event.name}</div>
+            <div class="event-bengali">${event.bn} • ${toBengaliNum(bengali.day)} ${bengaliMonths[bengali.month]}</div>
+          </div>
+          <span class="event-type ${event.type}">${event.type === 'holiday' ? 'ছুটি' : 'উৎসব'}</span>
+        `;
+        eventsList.appendChild(item);
+      }
+    }
+
+    function showDayDetails(date, bengali, festival) {
+      const msg = festival 
+        ? `${date.toDateString()}\n${toBengaliNum(bengali.day)} ${bengaliMonths[bengali.month]} ${toBengaliNum(bengali.year)}\n\n🎉 ${festival.name} (${festival.bn})`
+        : `${date.toDateString()}\n${toBengaliNum(bengali.day)} ${bengaliMonths[bengali.month]} ${toBengaliNum(bengali.year)}`;
+      alert(msg);
+    }
+
+    function prevMonth() {
+      currentMonth--;
+      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+      renderCalendar();
+    }
+
+    function nextMonth() {
+      currentMonth++;
+      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+      renderCalendar();
+    }
+
+    renderCalendar();
+  </script>
+</body>
+</html>
